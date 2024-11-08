@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Student Attendance System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <style>
+        /* Reset and variables */
+        :root {
+            --primary: #2563eb;
+            --primary-hover: #1d4ed8;
+            --success: #16a34a;
+            --error: #dc2626;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-secondary: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Base styles */
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+            padding-bottom: 80px;
+        }
+
+        .container {
+            max-width: 100%;
+            padding: 1rem;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 768px) {
+            .container {
+                max-width: 1280px;
+                padding: 2rem;
+            }
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border-radius: 1rem;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+            color: var(--primary);
+        }
+
+        /* Forms */
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            appearance: none;
+        }
+
+        .input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        /* Buttons */
+        .button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            font-size: 0.875rem;
+            width: 100%;
+            transition: background-color 0.2s;
+        }
+
+        .button-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .button-secondary {
+            background: white;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .button-danger {
+            background: var(--error);
+            color: white;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .button {
+                width: auto;
+            }
+            
+            .button-group {
+                flex-direction: row;
+            }
+        }
+
+        /* Scanner */
+        #reader {
+            border-radius: 0.5rem;
+            overflow: hidden;
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto;
+        }
+
+        #qrcode {
+            display: flex;
+            justify-content: center;
+            margin: 1rem 0;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            background: var(--background);
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+        }
+
+        /* Status badges */
+        .status-badge {
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-present {
+            background: rgba(22, 163, 74, 0.1);
+            color: var(--success);
+        }
+
+        .status-absent {
+            background: rgba(220, 38, 38, 0.1);
+            color: var(--error);
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            overflow-x: auto;
+            gap: 0.5rem;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        .tab {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            font-weight: 500;
+            white-space: nowrap;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        .tab.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        /* Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--surface);
+            display: flex;
+            justify-content: space-around;
+            padding: 0.5rem;
+            box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+            z-index: 100;
+        }
+
+        .bottom-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.25rem;
+            text-decoration: none;
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            padding: 0.5rem;
+        }
+
+        .bottom-nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            width: 1.5rem;
+            height: 1.5rem;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            bottom: 5rem;
+            left: 1rem;
+            right: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            color: white;
+            text-align: center;
+            animation: slideUp 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification-success {
+            background: var(--success);
+        }
+
+        .notification-error {
+            background: var(--error);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Section visibility */
+        .section {
+            display: none;
+        }
+
+        .section.active {
+            display: block;
+        }
+
+        /* File upload */
+        .file-drop {
+            border: 2px dashed var(--border);
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        /* Responsive grid */
+        .grid {
+            display: grid;
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-2 {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .bottom-nav {
+                display: none;
+            }
+            
+            body {
+                padding-bottom: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Student Attendance System</h1>
+    </div>
+
+    <div class="container">
+        <!-- Scanner Section -->
+        <section id="scanSection" class="section active">
+            <div class="card">
+                <div class="card-header">
+                    <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2m2 0l2-4h-4l2 4zm-6-11h2M4 12h2m6 0l2-4h-4l2 4z"/>
+                    </svg>
+                    <h2>Scan Attendance</h2>
+                </div>
+                <div id="reader"></div>
+                <div id="scanResult"></div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2m2 0l2-4h-4l2 4zm-6-11h2M4 12h2m6 0l2-4h-4l2 4z"/>
+                    </svg>
+                    <h2>Generate QR Code</h2>
+                </div>
+                <div class="input-group">
+                    <select id="studentSelect" class="input" onchange="generateQRCode()">
+                        <option value="">Select Student</option>
+                    </select>
+                </div>
+                <div id="qrcode"></div>
+                <button onclick="downloadQR()" class="button button-primary">Download QR Code</button>
+            </div>
+        </section>
+
+        <!-- Registration Section -->
+        <section id="registerSection" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+                    </svg>
+                    <h2>Student Registration</h2>
+                </div>
+                
+                <div class="tabs">
+                    <button class="tab active" onclick="showTab(event, 'single')">Single Entry</button>
+                    <button class="tab" onclick="showTab(event, 'bulk')">Bulk Import</button>
+                </div>
+
+                <div id="singleEntry" class="tab-content active">
+                    <div class="input-group">
+                        <label class="label">Student Name</label>
+                        <input type="text" id="studentName" class="input" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="label">Student ID</label>
+                        <input type="text" id="studentId" class="input" required>
+                    </div>
+                    <div class="input-group">
+                        <label class="label">Parent's Email</label>
+                        <input type="email" id="parentEmail" class="input" required>
+                    </div>
+                    <button onclick="addStudent()" class="button button-primary">Add Student</button>
+                </div>
+
+                <div id="bulkEntry" class="tab-content" style="display: none;">
+                    <div class="file-drop" onclick="document.getElementById('csvFile').click()">
+                        <input type="file" id="csvFile" accept=".csv" onchange="handleFileUpload()" style="display: none;">
+                        <p>Click to upload CSV or drag and drop</p>
+                    </div>
+                    <textarea id="bulkData" class="input" style="margin-top: 1rem; min-height: 200px;" placeholder="CSV data will appear here..."></textarea>
+                    <button onclick="importBulkStudents()" class="button button-primary">Import Students</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Attendance Records Section -->
+        <section id="attendanceSection" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                    </svg>
+                    <h2>Attendance Records</h2>
+                </div>
+
+                <div class="input-group">
+                    <label class="label">Date</label>
+                    <input type="date" id="attendanceDate" class="input">
+                </div>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <th>
+                                    <input type="checkbox" id="headerCheckbox" onchange="toggleSelectAll()">
+                                </th>
+                                <th>Student ID</th>
+                                <th>Name</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Time</th>
+                                <th>Parent Email</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attendanceBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="button-group">
+                    <button onclick="markSelectedAttendance('present')" class="button button-primary">Mark Present</button>
+                    <button onclick="markSelectedAttendance('absent')" class="button button-secondary">Mark Absent</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Notifications Section -->
+        <section id="notificationsSection" class="section">
+            <div class="card">
+                <div class="card-header">
+                    <svg class="card-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                    </svg>
+                    <h2>Notifications</h2>
+                </div>
+                
+                <div class="input-group">
+                    <input type="email" id="parentMonitorEmail" class="input" placeholder="Enter parent email">
+                    <div class="button-group">
+                        <button onclick="startMonitoring()" class="button button-primary">Start Monitoring</button>
+                        <button onclick="toggleSound()" id="soundButton" class="button button-secondary">
+                            <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" width="20" height="20">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                            </svg>
+                            Sound On
+                        </button>
+                    </div>
+                </div>
+
+                <div id="notificationList" class="notification-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="#scan" class="bottom-nav-item active" onclick="showSection('scan')">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2m2 0l2-4h-4l2 4zm-6-11h2M4 12h2m6 0l2-4h-4l2 4z"/>
+            </svg>
+            <span>Scan</span>
+        </a>
+        <a href="#register" class="bottom-nav-item" onclick="showSection('register')">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/>
+            </svg>
+            <span>Register</span>
+        </a>
+        <a href="#attendance" class="bottom-nav-item" onclick="showSection('attendance')">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+            </svg>
+            <span>Records</span>
+        </a>
+        <a href="#notifications" class="bottom-nav-item" onclick="showSection('notifications')">
+            <svg class="nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+            </svg>
+            <span>Alerts</span>
+        </a>
+    </nav>
+
+    <div id="notification" class="notification" style="display: none;"></div>
+    
+    <audio id="notificationSound">
+        <source src="https://jmp.sh/s/eppaIYHdY3heBFgnDtyc" type="audio/mp3">
+    </audio>
+
+    <script>
+        // Global variables
+        let students = [];
+        let html5QrcodeScanner;
+        let currentQRCode = null;
+        let currentEmail = '';
+        let soundEnabled = true;
+        let lastCheckTime = 0;
+
+        // Initialize the system
+        window.onload = function() {
+            initializeScanner();
+            loadStudentsFromStorage();
+            initializeDateInput();
+            updateStudentSelect();
+            lastCheckTime = new Date().getTime();
+        };
+
+        // Mobile navigation
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Show selected section
+            document.getElementById(sectionId + 'Section').classList.add('active');
+
+            // Update navigation
+            document.querySelectorAll('.bottom-nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[href="#${sectionId}"]`).classList.add('active');
+
+            // Reinitialize scanner if needed
+            if (sectionId === 'scan') {
+                initializeScanner();
+            }
+        }
+
+        // Scanner functions
+        function initializeScanner() {
+            if (html5QrcodeScanner) {
+                html5QrcodeScanner.clear();
+            }
+            
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            
+            html5QrcodeScanner = new Html5QrcodeScanner(
+                "reader", 
+                { 
+                    fps: isMobile ? 5 : 10,
+                    qrbox: { width: 250, height: 250 },
+                    aspectRatio: 1.0,
+                    showTorchButton: true
+                }
+            );
+            
+            html5QrcodeScanner.render(onScanSuccess, onScanError);
+        }
+
+        function onScanSuccess(decodedText, decodedResult) {
+            try {
+                const studentId = decodedText;
+                const student = students.find(s => s.id === studentId);
+                
+                if (student) {
+                    markAttendance(student, 'present');
+                    showNotification(`Marked ${student.name} as present`, 'success');
+                    
+                    // Vibrate on success if supported
+                    if ('vibrate' in navigator) {
+                        navigator.vibrate(200);
+                    }
+                } else {
+                    showNotification('Student not found', 'error');
+                }
+            } catch (error) {
+                showNotification('Invalid QR Code', 'error');
+            }
+        }
+
+        function onScanError(error) {
+            console.warn(`QR Code scan error: ${error}`);
+        }
+
+        // Tab functions
+        function showTab(event, tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.style.display = 'none';
+            });
+            
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName + 'Entry').style.display = 'block';
+            event.target.classList.add('active');
+        }
+
+        // Attendance functions
+        function toggleSelectAll() {
+            const headerCheckbox = document.getElementById('headerCheckbox');
+            const checkboxes = document.querySelectorAll('#attendanceBody input[type="checkbox"]');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = headerCheckbox.checked;
+            });
+        }
+
+        function markSelectedAttendance(status) {
+            const checkboxes = document.querySelectorAll('#attendanceBody input[type="checkbox"]:checked');
+            const selectedIds = Array.from(checkboxes).map(checkbox => checkbox.value);
+            
+            if (selectedIds.length === 0) {
+                showNotification('Please select at least one student', 'error');
+                return;
+            }
+
+            selectedIds.forEach(id => {
+                const student = students.find(s => s.id === id);
+                if (student) {
+                    markAttendance(student, status);
+                }
+            });
+
+            showNotification(`Marked ${selectedIds.length} students as ${status}`, 'success');
+            updateAttendanceTable();
+        }
+
+        function markAttendance(student, status) {
+            const date = document.getElementById('attendanceDate').value;
+            const time = new Date().toLocaleTimeString();
+
+            // Remove existing attendance for the same date
+            student.attendance = student.attendance.filter(a => a.date !== date);
+
+            // Add new attendance
+            student.attendance.push({
+                date: date,
+                status: status,
+                time: time
+            });
+
+            saveToStorage();
+            updateAttendanceTable();
+            handleAttendanceNotification(student, status);
+        }
+
+        // Student management functions
+        function addStudent() {
+            const name = document.getElementById('studentName').value.trim();
+            const id = document.getElementById('studentId').value.trim();
+            const email = document.getElementById('parentEmail').value.trim();
+
+            if (!name || !id || !email) {
+                showNotification('Please fill all fields', 'error');
+                return;
+            }
+
+            if (students.some(s => s.id === id)) {
+                showNotification('Student ID already exists', 'error');
+                return;
+            }
+
+            students.push({
+                id: id,
+                name: name,
+                parentEmail: email,
+                attendance: []
+            });
+
+            saveToStorage();
+            updateStudentSelect();
+            clearForm();
+            showNotification('Student added successfully', 'success');
+        }
+
+        function importBulkStudents() {
+            const bulkData = document.getElementById('bulkData').value.trim();
+            if (!bulkData) {
+                showNotification('Please provide data to import', 'error');
+                return;
+            }
+
+            const lines = bulkData.split('\n');
+            let successCount = 0;
+            let errorCount = 0;
+
+            lines.forEach(line => {
+                if (!line.trim()) return;
+
+                const [id, name, email] = line.split(',').map(item => item.trim());
+                
+                if (!id || !name || !email) {
+                    errorCount++;
+                    return;
+                }
+
+                if (students.some(s => s.id === id)) {
+                    errorCount++;
+                    return;
+                }
+
+                students.push({
+                    id: id,
+                    name: name,
+                    parentEmail: email,
+                    attendance: []
+                });
+                successCount++;
+            });
+
+            saveToStorage();
+            updateStudentSelect();
+            document.getElementById('bulkData').value = '';
+            showNotification(`Imported ${successCount} students. ${errorCount} errors.`, 'success');
+        }
+
+        // QR Code functions
+        function generateQRCode() {
+            const studentId = document.getElementById('studentSelect').value;
+            if (!studentId) {
+                showNotification('Please select a student first', 'error');
+                return;
+            }
+
+            const qrcodeElement = document.getElementById("qrcode");
+            qrcodeElement.innerHTML = '';
+
+            currentQRCode = new QRCode(qrcodeElement, {
+                text: studentId,
+                width: 200,
+                height: 200
+            });
+        }
+
+        function downloadQR() {
+            const qrCanvas = document.querySelector('#qrcode canvas');
+            if (!qrCanvas) {
+                showNotification('Please generate a QR code first', 'error');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.download = 'student-qr.png';
+            link.href = qrCanvas.toDataURL();
+            link.click();
+        }
+
+        // Notification functions
+        function handleAttendanceNotification(student, status) {
+            const notifications = JSON.parse(localStorage.getItem('attendance_notifications') || '[]');
+            
+            const notification = {
+                studentId: student.id,
+                studentName: student.name,
+                parentEmail: student.parentEmail,
+                status: status,
+                timestamp: new Date().toISOString()
+            };
+            
+            notifications.unshift(notification);
+            const trimmedNotifications = notifications.slice(0, 100);
+            localStorage.setItem('attendance_notifications', JSON.stringify(trimmedNotifications));
+        }
+
+        function startMonitoring() {
+            currentEmail = document.getElementById('parentMonitorEmail').value;
+            if (!currentEmail) {
+                showNotification('Please enter your email', 'error');
+                return;
+            }
+            checkForNewNotifications();
+            setInterval(checkForNewNotifications, 1000);
+            showNotification('Started monitoring notifications', 'success');
+        }
+
+        function toggleSound() {
+            soundEnabled = !soundEnabled;
+            document.getElementById('soundButton').textContent = soundEnabled ? 'Sound On' : 'Sound Off';
+            showNotification(`Sound ${soundEnabled ? 'enabled' : 'disabled'}`, 'success');
+        }
+
+        function checkForNewNotifications() {
+            if (!currentEmail) return;
+            const notifications = JSON.parse(localStorage.getItem('attendance_notifications') || '[]');
+            const myNotifications = notifications.filter(n => n.parentEmail === currentEmail);
+            
+            const currentTime = new Date().getTime();
+            const newNotifications = myNotifications.filter(n => {
+                const notificationTime = new Date(n.timestamp).getTime();
+                return notificationTime > lastCheckTime;
+            });
+
+            if (newNotifications.length > 0) {
+                newNotifications.forEach(displayNotification);
+                if (soundEnabled) {
+                    document.getElementById('notificationSound').play().catch(err => console.log('Audio play failed:', err));
+                }
+                if ('vibrate' in navigator) {
+                    navigator.vibrate(200);
+                }
+                lastCheckTime = currentTime;
+            }
+        }
+
+        function displayNotification(notification) {
+            const list = document.getElementById('notificationList');
+            const item = document.createElement('div');
+            item.className = 'notification-item';
+            item.innerHTML = `
+                <strong>${notification.studentName}</strong>
+                was marked
+                <span class="status-badge status-${notification.status.toLowerCase()}">
+                    ${notification.status}
+                </span>
+                <br>
+                <small>${new Date(notification.timestamp).toLocaleString()}</small>
+            `;
+            list.insertBefore(item, list.firstChild);
+        }
+
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification notification-${type}`;
+            notification.style.display = 'block';
+
+            if (type === 'error' && 'vibrate' in navigator) {
+                navigator.vibrate([100, 100, 100]);
+            } else if ('vibrate' in navigator) {
+                navigator.vibrate(200);
+            }
+
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        // Storage functions
+        function saveToStorage() {
+            localStorage.setItem('students', JSON.stringify(students));
+            updateAttendanceTable();
+        }
+
+        function loadStudentsFromStorage() {
+            const stored = localStorage.getItem('students');
+            if (stored) {
+                students = JSON.parse(stored);
+                updateAttendanceTable();
+            }
+        }
+
+        // UI update functions
+        function updateStudentSelect() {
+            const select = document.getElementById('studentSelect');
+            select.innerHTML = '<option value="">Select Student</option>';
+            
+            students.sort((a, b) => a.name.localeCompare(b.name)).forEach(student => {
+                const option = document.createElement('option');
+                option.value = student.id;
+                option.textContent = `${student.name} (${student.id})`;
+                select.appendChild(option);
+            });
+        }
+
+        function updateAttendanceTable() {
+            const tbody = document.getElementById('attendanceBody');
+            tbody.innerHTML = '';
+
+            const date = document.getElementById('attendanceDate').value;
+            const sortedStudents = [...students].sort((a, b) => a.name.localeCompare(b.name));
+
+            sortedStudents.forEach(student => {
+                const attendance = student.attendance.find(a => a.date === date) || {};
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" value="${student.id}">
+                    </td>
+                    <td>${student.id}</td>
+                    <td>${student.name}</td>
+                    <td>${attendance.date || date}</td>
+                    <td>${attendance.status ? 
+                        `<span class="status-badge status-${attendance.status}">${attendance.status.toUpperCase()}</span>` : 
+                        '-'}</td>
+                    <td>${attendance.time || '-'}</td>
+                    <td>${student.parentEmail}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentId').value = '';
+            document.getElementById('parentEmail').value = '';
+        }
+
+        function initializeDateInput() {
+            const today = new Date();
+            const dateInput = document.getElementById('attendanceDate');
+            dateInput.valueAsDate = today;
+            dateInput.addEventListener('change', updateAttendanceTable);
+        }
+
+        function handleFileUpload() {
+            const fileInput = document.getElementById('csvFile');
+            const file = fileInput.files[0];
+            
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('bulkData').value = e.target.result;
+                };
+                reader.readAsText(file);
+            }
+        }
+
+        // Pull to refresh implementation
+        let touchStartY = 0;
+        let touchEndY = 0;
+
+        document.addEventListener('touchstart', e => {
+            touchStartY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchmove', e => {
+            touchEndY = e.touches[0].clientY;
+        }, { passive: true });
+
+        document.addEventListener('touchend', () => {
+            const distance = touchEndY - touchStartY;
+            if (distance > 100 && window.scrollY === 0) {
+                showNotification('Refreshing...', 'success');
+                loadStudentsFromStorage();
+                updateAttendanceTable();
+            }
+        }, { passive: true });
+
+        // Handle visibility change
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') {
+                loadStudentsFromStorage();
+                updateAttendanceTable();
+            }
+        });
+
+        // Handle offline/online status
+        window.addEventListener('online', () => {
+            showNotification('Back online', 'success');
+        });
+
+        window.addEventListener('offline', () => {
+            showNotification('Working offline', 'error');
+        });
+    </script>
+</body>
+</html>
